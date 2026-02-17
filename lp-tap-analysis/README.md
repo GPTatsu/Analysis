@@ -12,7 +12,7 @@ Clarity（モバイル）のLPタップデータを可視化するダッシュ�
 1. リポジトリに `lp-tap-analysis` フォルダを push
 2. **Settings → Pages** で Source を「Deploy from a branch」に設定
 3. ブランチとフォルダ（通常は `/ (root)`）を選択して保存
-4. アクセスURL: `https://<username>.github.io/<repo>/lp-tap-analysis/`
+4. アクセスURL: `https://gptatsu.github.io/Analysis/lp-tap-analysis/`
 
 ## ファイル構成
 
