@@ -1,0 +1,13 @@
+# 機密データ（顧客・受注等）
+data/
+history.csv
+
+# Python
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+
+# OS
+.DS_Store

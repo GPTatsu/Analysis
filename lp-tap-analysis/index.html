@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ショコラマルシェLP タップ分析</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/recharts@2/umd/Recharts.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { margin: 0; font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel" data-presets="react">
+    const { useState, useMemo } = React;
+    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = Recharts;
+
+    const PRODUCTS = [
+      { id:1, name:"AMILY チアフルチョコチップ生クッキー", taps:1255, sec:"7F Rec", isNew:true, ec:"店頭のみ" },
+      { id:2, name:"ヴィタメール マカダミア・ショコラ・アソート", taps:1338, sec:"7F Rec", isNew:false, ec:"EC有" },
+      { id:3, name:"J.DEUX CERCLE ローズクランチチョコVD", taps:732, sec:"7F Rec", isNew:true, ec:"店頭のみ" },
+      { id:4, name:"シルスマリア 酒生チョコ3種セット", taps:983, sec:"7F Rec", isNew:false, ec:"店頭のみ" },
+      { id:5, name:"積奏バターサンド バレンタインバターサンド", taps:1285, sec:"7F Rec", isNew:true, ec:"EC有" },
+      { id:6, name:"デジレー ショコラ&トリュフ", taps:856, sec:"7F Rec", isNew:false, ec:"店頭のみ" },
+      { id:7, name:"ピエール・ルドン コフレ フレーズ", taps:319, sec:"7F Rec", isNew:false, ec:"EC有" },
+      { id:8, name:"ブノワ・ニアン ブルー デ トワ", taps:977, sec:"7F Rec", isNew:true, ec:"店頭のみ" },
+      { id:9, name:"ブボ・バルセロナ チョコスカルプチャー", taps:451, sec:"7F Rec", isNew:false, ec:"店頭のみ" },
+      { id:10, name:"リュウールドレ キャラメルムーサンド", taps:1221, sec:"7F Rec", isNew:false, ec:"店頭のみ" },
+      { id:11, name:"ヴィクトリアンカフェ 禁断の果実パフェ", taps:584, sec:"7F Rec", isNew:true, ec:"イートイン" },
+      { id:12, name:"カカオサンパカ ジャラッツ ディアゴナル", taps:728, sec:"7F Rec", isNew:false, ec:"イートイン" },
+      { id:13, name:"BABBI クレープ", taps:539, sec:"7F Rec", isNew:false, ec:"イートイン" },
+      { id:14, name:"BABBI スペシャルジェラート", taps:448, sec:"7F Rec", isNew:false, ec:"イートイン" },
+      { id:15, name:"FLOR GELATO ジェラート", taps:515, sec:"7F Rec", isNew:true, ec:"イートイン" },
+      { id:16, name:"アーモンドマイスター", taps:625, sec:"7F Std", isNew:true, ec:"EC有" },
+      { id:17, name:"カカオサンパカ レガロ デ カロロ", taps:385, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:18, name:"ガルニエ ガルニエ I", taps:909, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:19, name:"KARMELLO For you", taps:375, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:20, name:"キットカット ベアー缶", taps:313, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:21, name:"くら吉 フルーツクッキー缶", taps:361, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:22, name:"クレルドルン ピア&クランチ", taps:262, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:23, name:"ゴディバ 100年の遊び心", taps:189, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:24, name:"賛否両論 ペカンナッツショコラ3種", taps:224, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:25, name:"シャルルマーニュ アソート6", taps:369, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:26, name:"Ginger Garden テディクランチドーナツ", taps:917, sec:"7F Std", isNew:true, ec:"店頭のみ" },
+      { id:27, name:"ディック・ブルーナ ミッフィースイートホーム", taps:632, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:28, name:"デメル フルフトミットショコラーデ", taps:142, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:29, name:"デルレイ ハーモニアス", taps:267, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:30, name:"ドゥルミアン セレクション8", taps:157, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:31, name:"日本ハビタット協会 桑ショコラ", taps:158, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:32, name:"BABBI×a-jolie スペシャルギフト", taps:437, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:33, name:"パスカル・ル・ガック ボンボンショコラ", taps:334, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:34, name:"はじけるキャンディチョコレート 喫茶メニュー缶", taps:540, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:35, name:"ピエール・エルメ サブレ エ ショコラ", taps:498, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:36, name:"ピエール マルコリーニ コフレ", taps:336, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:37, name:"ピスタチオマニア ピスタチオガーデン", taps:540, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:38, name:"ファットウィッチ バレンタイン", taps:278, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:39, name:"フーシェオリンポス 星の結晶", taps:1303, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:40, name:"藤崎×浦霞×メリー 地酒ガナッシュ", taps:519, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:41, name:"フラワーノーズ×ゴンチャロフ", taps:1486, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:42, name:"ベルアメール クレープショコラ", taps:317, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:43, name:"ベルアメール京都別邸 瑞穂のしずく", taps:249, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:44, name:"ボンシャペリー プレミアムショコショコラ", taps:250, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:45, name:"マイアーニ FIATミニカーセット", taps:800, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:46, name:"マダムドリュック ジャルダンシークレット", taps:163, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:47, name:"マドラー", taps:612, sec:"7F Std", isNew:true, ec:"店頭のみ" },
+      { id:48, name:"MAISON CACAO 生チョコクッキー", taps:380, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:49, name:"ラ フェヴァリ トリュフボヌール", taps:198, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:50, name:"ラ・メゾン・デュ・ショコラ", taps:235, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:51, name:"リピチョコ 宮城しみチョコ", taps:519, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:52, name:"ルクス・アルクス トリュフアソート", taps:312, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:53, name:"ル シャトー バラエティボックス", taps:492, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:54, name:"レオニダス マノンアソート", taps:246, sec:"7F Std", isNew:false, ec:"EC有" },
+      { id:55, name:"ロイズ 生チョコレート ティラミス", taps:961, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:56, name:"ロクメイカン ローズパレット", taps:152, sec:"7F Std", isNew:false, ec:"店頭のみ" },
+      { id:81, name:"オードリー ストロベリーショコラ", taps:1428, sec:"1F", isNew:false, ec:"店頭のみ" },
+      { id:82, name:"グラマシーNY マカダミアチョコバレット", taps:1050, sec:"1F", isNew:false, ec:"店頭のみ" },
+      { id:83, name:"カタヌキヤ バレンタインパンダ", taps:283, sec:"B1F", isNew:false, ec:"EC有" },
+      { id:84, name:"zarame ウイスキーボンボン", taps:508, sec:"B1F", isNew:true, ec:"EC有" },
+      { id:85, name:"marl ほおばるクッキー", taps:456, sec:"B1F", isNew:true, ec:"店頭のみ" },
+    ];
+
+    const BRANDS = [
+      { id:57, name:"カファレル", taps:1063, pos:1 },
+      { id:61, name:"コーヒーラボ(モロゾフ×オニバス)", taps:603, pos:5 },
+      { id:62, name:"ゴンチャロフ アンジュジュ", taps:411, pos:6 },
+      { id:78, name:"ムーミン×メリーチョコレート", taps:343, pos:22 },
+      { id:73, name:"ねこみゃみれ", taps:341, pos:17 },
+      { id:59, name:"甘味画廊", taps:301, pos:3 },
+      { id:58, name:"奏", taps:275, pos:2 },
+      { id:76, name:"ポケモンデザイン", taps:259, pos:20 },
+      { id:75, name:"ビートル", taps:235, pos:19 },
+      { id:80, name:"ヴァン・ゴッホ・ウォッカ", taps:233, pos:24 },
+      { id:79, name:"レオン by モロゾフ", taps:161, pos:23 },
+      { id:77, name:"Pokémon meets メリー", taps:153, pos:21 },
+      { id:60, name:"クルイゼル", taps:146, pos:4 },
+      { id:66, name:"ジャミーラ", taps:131, pos:10 },
+      { id:69, name:"TEA BAR×モロゾフ", taps:130, pos:13 },
+      { id:63, name:"ゴンチャロフ ジェンティー&リンフォード", taps:123, pos:7 },
+      { id:64, name:"ゴンチャロフ メゾンドボンボン", taps:114, pos:8 },
+      { id:65, name:"ゴンチャロフ ラシーヌ", taps:77, pos:9 },
+      { id:72, name:"ナハトラビュリント", taps:60, pos:16 },
+      { id:68, name:"セゾンドセツコ", taps:58, pos:12 },
+      { id:74, name:"niwaniwa", taps:42, pos:18 },
+      { id:70, name:"デ・グランベル", taps:35, pos:14 },
+      { id:67, name:"ズーロジー", taps:30, pos:11 },
+      { id:71, name:"トニーズチョコロンリー", taps:25, pos:15 },
+    ];
+
+    const BRAND_AVG = 223;
+    const BRAND_TOTAL = 5348;
+    const SEC_META = {
+      "7F Rec": { avg: 815, color: "#B45309", label: "7F おすすめ" },
+      "7F Std": { avg: 450, color: "#8B5E3C", label: "7F 定番" },
+      "1F": { avg: 1239, color: "#7C3AED", label: "1F" },
+      "B1F": { avg: 416, color: "#0369A1", label: "B1F" },
+    };
+
+    const fmt = (n) => n.toLocaleString("ja-JP");
+    const tr = (s, n) => s.length > n ? s.slice(0, n) + "…" : s;
+
+    const getBarColor = (taps, baseline, secKey) => {
+      const r = taps / baseline;
+      if (r > 1.5) return "#15803D";
+      if (r > 1.2) return "#22863A";
+      if (r < 0.5) return "#DC2626";
+      if (r < 0.7) return "#E06C57";
+      return secKey ? (SEC_META[secKey]?.color || "#A16207") : "#A16207";
+    };
+
+    const Tip = ({ active, payload }) => {
+      if (!active || !payload?.length) return null;
+      const d = payload[0]?.payload;
+      if (!d) return null;
+      const sec = d.sec ? SEC_META[d.sec] : null;
+      const bl = d.baseline || BRAND_AVG;
+      const diff = d.taps - bl;
+      return (
+        <div style={{ background: "#fff", border: "1px solid #e0ddd8", borderRadius: 8, padding: "10px 14px", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxWidth: 280 }}>
+          <div style={{ fontWeight: 700, marginBottom: 4 }}>{d.name}</div>
+          {sec && <span style={{ color: sec.color, marginRight: 8 }}>{sec.label}</span>}
+          {d.isNew && <span style={{ color: "#DC2626", marginRight: 8 }}>NEW</span>}
+          {d.ec && <span style={{ color: "#888" }}>{d.ec}</span>}
+          {d.pos && <div style={{ color: "#888", marginTop: 2 }}>リスト内 {d.pos}番目 / 24</div>}
+          <div style={{ marginTop: 4 }}>タップ: <b>{fmt(d.taps)}</b> ／ 平均: {fmt(bl)}</div>
+          <div style={{ color: diff >= 0 ? "#15803D" : "#B91C1C", fontWeight: 600 }}>
+            乖離: {diff >= 0 ? "+" : ""}{fmt(diff)} ({diff >= 0 ? "+" : ""}{((d.taps / bl - 1) * 100).toFixed(0)}%)
+          </div>
+        </div>
+      );
+    };
+
+    function LPTapAnalysis() {
+      const [tab, setTab] = useState("overview");
+      const [prodSort, setProdSort] = useState("rank");
+      const [secFilter, setSecFilter] = useState("all");
+      const [brandSort, setBrandSort] = useState("rank");
+
+      const fp = useMemo(() => {
+        let d = secFilter === "all" ? PRODUCTS : PRODUCTS.filter(p => p.sec === secFilter);
+        return d.map(p => ({ ...p, baseline: SEC_META[p.sec]?.avg || 400 }));
+      }, [secFilter]);
+
+      const prodData = useMemo(() => {
+        const arr = fp.map(p => ({ ...p, short: p.name, diff: p.taps - p.baseline }));
+        return prodSort === "rank" ? [...arr].sort((a, b) => b.taps - a.taps) : [...arr].sort((a, b) => a.id - b.id);
+      }, [fp, prodSort]);
+
+      const brandData = useMemo(() => {
+        const arr = BRANDS.map(b => ({ ...b, short: tr(b.name, 18), baseline: BRAND_AVG, diff: b.taps - BRAND_AVG }));
+        return brandSort === "rank" ? [...arr].sort((a, b) => b.taps - a.taps) : [...arr].sort((a, b) => a.pos - b.pos);
+      }, [brandSort]);
+
+      const sectionBars = [
+        { name: "7F おすすめ", total: 12601, color: "#B45309" },
+        { name: "7F 定番", total: 19177, color: "#8B5E3C" },
+        { name: "7F その他ブランド", total: 14218, color: "#A16207" },
+        { name: "1F", total: 2543, color: "#7C3AED" },
+        { name: "B1F", total: 1444, color: "#0369A1" },
+        { name: "ナビ等", total: 15262, color: "#9CA3AF" },
+      ];
+
+      return (
+        <div style={{ fontFamily: "'Noto Sans JP','Hiragino Sans',sans-serif", maxWidth: 1100, margin: "0 auto", padding: "20px 16px", background: "#FAFAF8" }}>
+          <h1 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 4px" }}>ショコラマルシェLP タップ分析</h1>
+          <p style={{ fontSize: 12, color: "#888", margin: "0 0 16px" }}>Clarity（モバイル）｜1/15〜2/14 全期間｜PV 43,756 ・ タップ 65,245</p>
+
+          <div style={{ display: "flex", gap: 2, marginBottom: 20, borderBottom: "2px solid #E8E5E0" }}>
+            {[{ k:"overview",l:"全体構造" },{ k:"products",l:"商品タップ" },{ k:"brands",l:"その他ブランド" }].map(t => (
+              <button key={t.k} onClick={() => setTab(t.k)} style={{
+                padding: "8px 20px", fontSize: 13, fontWeight: tab === t.k ? 700 : 400, cursor: "pointer",
+                background: "none", border: "none", borderBottom: tab === t.k ? "3px solid #1a1a1a" : "3px solid transparent",
+                color: tab === t.k ? "#1a1a1a" : "#888", marginBottom: -2,
+              }}>{t.l}</button>
+            ))}
+          </div>
+
+          {tab === "overview" && <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10, marginBottom: 18 }}>
+              {[
+                { l: "7F おすすめ", v: 12601, s: "15商品・平均815", c: "#B45309" },
+                { l: "7F 定番", v: 19177, s: "41商品・平均450", c: "#8B5E3C" },
+                { l: "7F その他ブランド", v: 14218, s: "24ブランド＋もっと見る8,621", c: "#A16207" },
+                { l: "1F", v: 2543, s: "2商品・平均1,239", c: "#7C3AED" },
+                { l: "B1F", v: 1444, s: "3商品・平均416", c: "#0369A1" },
+              ].map((c, i) => (
+                <div key={i} style={{ background: "#fff", borderRadius: 10, padding: "12px 14px", borderLeft: `4px solid ${c.c}` }}>
+                  <div style={{ fontSize: 11, color: "#888" }}>{c.l}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800 }}>{fmt(c.v)}<span style={{ fontSize: 12, fontWeight: 400, color: "#888" }}> ({(c.v/65245*100).toFixed(1)}%)</span></div>
+                  <div style={{ fontSize: 11, color: "#888" }}>{c.s}</div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: "#FEF3C7", borderRadius: 12, border: "1px solid #F59E0B", padding: "14px 18px", marginBottom: 18 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#92400E", marginBottom: 4 }}>⚡「もっと見る」ボタン = 全タップの13.2%（8,621回）</div>
+              <div style={{ fontSize: 13, color: "#78350F", lineHeight: 1.7 }}>
+                全要素中ダントツ1位。Recommended全15商品の合計（12,601）の7割に迫るインタラクション量。ユーザーは商品単体よりも<b>「どのブランドが出ているか」</b>という俯瞰情報を強く求めている。
+              </div>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "18px", marginBottom: 18 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, margin: "0 0 10px" }}>セクション別タップ配分</h3>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={sectionBars} margin={{ left: 5, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} tickFormatter={fmt} />
+                  <Tooltip formatter={(v) => [fmt(v), "タップ"]} />
+                  <Bar dataKey="total" radius={[4,4,0,0]} barSize={48}>
+                    {sectionBars.map((d, i) => <Cell key={i} fill={d.color} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "18px" }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, margin: "0 0 10px" }}>1アイテムあたり平均タップ</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={[
+                  { name: "1F", avg: 1239, c: "#7C3AED" },
+                  { name: "7F おすすめ", avg: 815, c: "#B45309" },
+                  { name: "7F 定番", avg: 450, c: "#8B5E3C" },
+                  { name: "B1F", avg: 416, c: "#0369A1" },
+                  { name: "その他ブランド", avg: 223, c: "#A16207" },
+                ]} layout="vertical" margin={{ left: 5, right: 30 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 11 }} />
+                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
+                  <Tooltip formatter={(v) => [fmt(v), "平均タップ"]} />
+                  <Bar dataKey="avg" radius={[0,4,4,0]} barSize={20}>
+                    {["#7C3AED","#B45309","#8B5E3C","#0369A1","#A16207"].map((c, i) => <Cell key={i} fill={c} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <p style={{ fontSize: 11, color: "#888", margin: "6px 0 0", textAlign: "center" }}>
+                1Fはオードリー・グラマシーの2商品のみ。その他ブランドはテキストリンクのみ（画像なし）。
+              </p>
+            </div>
+          </>}
+
+          {tab === "products" && <>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                {[{k:"rank",l:"タップ順"},{k:"pos",l:"掲載順"}].map(v => (
+                  <button key={v.k} onClick={() => setProdSort(v.k)} style={{
+                    padding: "5px 14px", fontSize: 12, borderRadius: 6, border: "1px solid #ddd", cursor: "pointer",
+                    background: prodSort === v.k ? "#1a1a1a" : "#fff", color: prodSort === v.k ? "#fff" : "#666",
+                  }}>{v.l}</button>
+                ))}
+              </div>
+              <div style={{ display: "flex", gap: 4, marginLeft: "auto" }}>
+                {[{k:"all",l:"全て"},{k:"7F Rec",l:"おすすめ"},{k:"7F Std",l:"定番"},{k:"1F",l:"1F"},{k:"B1F",l:"B1F"}].map(f => (
+                  <button key={f.k} onClick={() => setSecFilter(f.k)} style={{
+                    padding: "5px 10px", fontSize: 11, borderRadius: 6, border: "1px solid #ddd", cursor: "pointer",
+                    background: secFilter === f.k ? "#1a1a1a" : "#fff", color: secFilter === f.k ? "#fff" : "#666",
+                  }}>{f.l}</button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "14px", marginBottom: 14 }}>
+              <ResponsiveContainer width="100%" height={Math.max(prodData.length * 28, 400)}>
+                <BarChart data={prodData} layout="vertical" margin={{ left: 5, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={fmt} />
+                  <YAxis dataKey="short" type="category" width={230} tick={{ fontSize: 9.5 }} interval={0} />
+                  <Tooltip content={<Tip />} />
+                  <Bar dataKey="taps" radius={[0,3,3,0]} barSize={14}>
+                    {prodData.map((d, i) => <Cell key={i} fill={getBarColor(d.taps, d.baseline, d.sec)} opacity={d.isNew ? 1 : 0.78} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <div style={{ display: "flex", gap: 14, justifyContent: "center", fontSize: 10, color: "#888", marginTop: 6 }}>
+                <span>🟢 1.5倍超</span><span style={{ color: "#22863A" }}>■ 平均超</span><span style={{ color: "#8B5E3C" }}>■ 平均付近</span><span style={{ color: "#E06C57" }}>■ 0.7倍未満</span><span>🔴 0.5倍未満</span>
+              </div>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: "#F7F5F2" }}>
+                    <th style={{ padding: "7px 6px", textAlign: "center", borderBottom: "2px solid #E8E5E0", width: 32 }}>#</th>
+                    <th style={{ padding: "7px 8px", textAlign: "left", borderBottom: "2px solid #E8E5E0" }}>商品名</th>
+                    <th style={{ padding: "7px 6px", textAlign: "center", borderBottom: "2px solid #E8E5E0", width: 64 }}>セクション</th>
+                    <th style={{ padding: "7px 6px", textAlign: "right", borderBottom: "2px solid #E8E5E0", width: 55 }}>タップ</th>
+                    <th style={{ padding: "7px 6px", textAlign: "right", borderBottom: "2px solid #E8E5E0", width: 55 }}>平均比</th>
+                    <th style={{ padding: "7px 6px", textAlign: "center", borderBottom: "2px solid #E8E5E0", width: 42 }}>EC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...fp].sort((a, b) => b.taps - a.taps).map((d, i) => {
+                    const ratio = d.taps / d.baseline;
+                    return (
+                      <tr key={d.id} style={{ borderBottom: "1px solid #F0EDE8", background: i < 10 ? "#FFFDF7" : "transparent" }}>
+                        <td style={{ padding: "5px 4px", textAlign: "center", fontWeight: i < 3 ? 800 : 400, color: i < 3 ? "#B45309" : "#888", fontSize: 11 }}>{i + 1}</td>
+                        <td style={{ padding: "5px 8px", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 220 }}>
+                          {d.isNew && <span style={{ fontSize: 9, background: "#FEE2E2", color: "#DC2626", padding: "1px 4px", borderRadius: 3, marginRight: 4 }}>NEW</span>}
+                          {d.name}
+                        </td>
+                        <td style={{ padding: "5px 4px", textAlign: "center" }}>
+                          <span style={{ fontSize: 10, padding: "2px 5px", borderRadius: 8, background: (SEC_META[d.sec]?.color||"#888") + "18", color: SEC_META[d.sec]?.color }}>{SEC_META[d.sec]?.label}</span>
+                        </td>
+                        <td style={{ padding: "5px 6px", textAlign: "right", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmt(d.taps)}</td>
+                        <td style={{ padding: "5px 6px", textAlign: "right", fontWeight: 600, color: ratio > 1.2 ? "#15803D" : ratio < 0.7 ? "#DC2626" : "#888" }}>
+                          {ratio >= 1 ? "+" : ""}{((ratio-1)*100).toFixed(0)}%
+                        </td>
+                        <td style={{ padding: "5px 4px", textAlign: "center", fontSize: 10, color: d.ec === "EC有" ? "#1D4ED8" : "#aaa" }}>{d.ec}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>}
+
+          {tab === "brands" && <>
+            <div style={{ background: "#FEF3C7", borderRadius: 12, border: "1px solid #F59E0B", padding: "14px 18px", marginBottom: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                {[
+                  { l: "「もっと見る」タップ", v: "8,621", s: "全タップの13.2%" },
+                  { l: "ブランドリスト合計", v: fmt(BRAND_TOTAL), s: `24ブランド・平均${BRAND_AVG}` },
+                  { l: "セクション合計", v: "14,218", s: "全タップの21.8%" },
+                ].map((c, i) => (
+                  <div key={i}>
+                    <div style={{ fontSize: 11, color: "#92400E" }}>{c.l}</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#78350F" }}>{c.v}</div>
+                    <div style={{ fontSize: 11, color: "#92400E" }}>{c.s}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
+              {[{k:"rank",l:"タップ順"},{k:"pos",l:"掲載順（五十音）"}].map(v => (
+                <button key={v.k} onClick={() => setBrandSort(v.k)} style={{
+                  padding: "5px 14px", fontSize: 12, borderRadius: 6, border: "1px solid #ddd", cursor: "pointer",
+                  background: brandSort === v.k ? "#1a1a1a" : "#fff", color: brandSort === v.k ? "#fff" : "#666",
+                }}>{v.l}</button>
+              ))}
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "14px", marginBottom: 16 }}>
+              <ResponsiveContainer width="100%" height={620}>
+                <BarChart data={brandData} layout="vertical" margin={{ left: 5, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={fmt} />
+                  <YAxis dataKey="short" type="category" width={165} tick={{ fontSize: 10 }} />
+                  <Tooltip content={<Tip />} />
+                  <Bar dataKey="taps" radius={[0,3,3,0]} barSize={16}>
+                    {brandData.map((d, i) => <Cell key={i} fill={getBarColor(d.taps, BRAND_AVG)} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: "#F7F5F2" }}>
+                    <th style={{ padding: "7px 6px", textAlign: "center", borderBottom: "2px solid #E8E5E0", width: 46 }}>タップ順</th>
+                    <th style={{ padding: "7px 8px", textAlign: "left", borderBottom: "2px solid #E8E5E0" }}>ブランド名</th>
+                    <th style={{ padding: "7px 6px", textAlign: "center", borderBottom: "2px solid #E8E5E0", width: 70 }}>リスト順</th>
+                    <th style={{ padding: "7px 6px", textAlign: "right", borderBottom: "2px solid #E8E5E0", width: 60 }}>タップ</th>
+                    <th style={{ padding: "7px 6px", textAlign: "right", borderBottom: "2px solid #E8E5E0", width: 60 }}>平均比</th>
+                    <th style={{ padding: "7px 6px", textAlign: "right", borderBottom: "2px solid #E8E5E0", width: 55 }}>シェア</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...BRANDS].sort((a, b) => b.taps - a.taps).map((d, i) => {
+                    const ratio = d.taps / BRAND_AVG;
+                    const posGap = (i + 1) - d.pos;
+                    return (
+                      <tr key={d.id} style={{ borderBottom: "1px solid #F0EDE8", background: i < 5 ? "#FFFDF7" : "transparent" }}>
+                        <td style={{ padding: "5px 6px", textAlign: "center", fontWeight: i < 3 ? 800 : 400, color: i < 3 ? "#B45309" : "#888" }}>{i + 1}</td>
+                        <td style={{ padding: "5px 8px", fontWeight: 600 }}>{d.name}</td>
+                        <td style={{ padding: "5px 6px", textAlign: "center" }}>
+                          {d.pos}番目
+                          {Math.abs(posGap) >= 5 && <span style={{ fontSize: 10, marginLeft: 3, color: posGap > 0 ? "#DC2626" : "#15803D" }}>
+                            {posGap > 0 ? `↓${posGap}` : `↑${Math.abs(posGap)}`}
+                          </span>}
+                        </td>
+                        <td style={{ padding: "5px 6px", textAlign: "right", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmt(d.taps)}</td>
+                        <td style={{ padding: "5px 6px", textAlign: "right", fontWeight: 600, color: ratio > 1.2 ? "#15803D" : ratio < 0.7 ? "#DC2626" : "#888" }}>
+                          {ratio >= 1 ? "+" : ""}{((ratio-1)*100).toFixed(0)}%
+                        </td>
+                        <td style={{ padding: "5px 6px", textAlign: "right", color: "#888" }}>{(d.taps/BRAND_TOTAL*100).toFixed(1)}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "#F7F5F2", fontWeight: 700, borderTop: "2px solid #E8E5E0" }}>
+                    <td colSpan={3} style={{ padding: "7px 8px" }}>合計</td>
+                    <td style={{ padding: "7px 6px", textAlign: "right" }}>{fmt(BRAND_TOTAL)}</td>
+                    <td></td>
+                    <td style={{ padding: "7px 6px", textAlign: "right" }}>100%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </>}
+
+          <p style={{ fontSize: 10, color: "#aaa", marginTop: 12, textAlign: "right" }}>
+            Clarity モバイルタップ（2026/1/15-2/14 全期間）｜平均比はセクション別平均との比較
+          </p>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<LPTapAnalysis />);
+  </script>
+</body>
+</html>
