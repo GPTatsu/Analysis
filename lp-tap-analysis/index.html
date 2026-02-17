@@ -9,9 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
-  <script>React.PropTypes = PropTypes;</script>
-  <script crossorigin src="https://cdn.jsdelivr.net/npm/recharts@2.15.0/umd/Recharts.min.js"></script>
   <script crossorigin src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
   <style>
     body { margin: 0; font-family: inherit; }
@@ -29,7 +26,50 @@
   <div id="root" style="padding: 20px; font-family: sans-serif;">読み込み中…</div>
   <script type="text/babel" data-presets="env,react">
     const { useState, useMemo } = React;
-    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = Recharts;
+
+    const VerticalBarChart = ({ data, dataKey, nameKey, colorKey, formatter }) => {
+      const max = Math.max(...data.map(d => d[dataKey]));
+      return (
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 250, paddingTop: 20 }}>
+          {data.map((d, i) => (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ fontSize: 10, marginBottom: 4, height: 14, overflow: "hidden", textAlign: "center" }}>{d[nameKey]}</div>
+              <div style={{ width: "100%", height: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                <div style={{ width: "80%", height: (d[dataKey] / max) * 180, background: d[colorKey] || "#888", borderRadius: "4px 4px 0 0", minHeight: 4 }} title={formatter ? formatter(d[dataKey]) : d[dataKey]} />
+              </div>
+              <div style={{ fontSize: 10, marginTop: 4, fontWeight: 600 }}>{formatter ? formatter(d[dataKey]) : d[dataKey]}</div>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    const HorizontalBarChart = ({ data, dataKey, labelKey, maxVal, getColor, barHeight, showTooltip, labelWidth }) => {
+      const [hovered, setHovered] = useState(null);
+      const max = maxVal || Math.max(...data.map(d => d[dataKey]));
+      const lw = labelWidth ?? 230;
+      return (
+        <div style={{ position: "relative" }}>
+          {showTooltip && hovered && (
+            <div style={{ position: "absolute", top: 0, right: 0, background: "#fff", border: "1px solid #e0ddd8", borderRadius: 8, padding: "10px 14px", fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxWidth: 280, zIndex: 10 }}>
+              {React.createElement(showTooltip, { payload: [{ payload: hovered }] })}
+            </div>
+          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {data.map((d, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: barHeight || 24 }}>
+                <div style={{ width: lw, fontSize: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d[labelKey]}</div>
+                <div style={{ flex: 1, height: barHeight ? barHeight - 4 : 14, background: "#f0f0f0", borderRadius: 4, overflow: "hidden", position: "relative" }}
+                  onMouseEnter={() => setHovered(d)} onMouseLeave={() => setHovered(null)}>
+                  <div style={{ width: (d[dataKey] / max) * 100 + "%", height: "100%", background: getColor(d), borderRadius: 4, transition: "width .2s" }} />
+                </div>
+                <div style={{ width: 50, fontSize: 10, textAlign: "right", fontWeight: 600 }}>{typeof d[dataKey] === "number" ? d[dataKey].toLocaleString("ja-JP") : d[dataKey]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
 
     const PRODUCTS = [
       { id:1, name:"AMILY チアフルチョコチップ生クッキー", taps:1255, sec:"7F Rec", isNew:true, ec:"店頭のみ" },
@@ -143,8 +183,8 @@
       return secKey ? (SEC_META[secKey]?.color || "#A16207") : "#A16207";
     };
 
-    const Tip = ({ active, payload }) => {
-      if (!active || !payload?.length) return null;
+    const TipContent = ({ payload }) => {
+      if (!payload?.length) return null;
       const d = payload[0]?.payload;
       if (!d) return null;
       const sec = d.sec ? SEC_META[d.sec] : null;
@@ -236,38 +276,25 @@
 
             <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "18px", marginBottom: 18 }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, margin: "0 0 10px" }}>セクション別タップ配分</h3>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={sectionBars} margin={{ left: 5, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} tickFormatter={fmt} />
-                  <Tooltip formatter={(v) => [fmt(v), "タップ"]} />
-                  <Bar dataKey="total" radius={[4,4,0,0]} barSize={48}>
-                    {sectionBars.map((d, i) => <Cell key={i} fill={d.color} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <VerticalBarChart data={sectionBars} dataKey="total" nameKey="name" colorKey="color" formatter={fmt} />
             </div>
 
             <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "18px" }}>
               <h3 style={{ fontSize: 14, fontWeight: 700, margin: "0 0 10px" }}>1アイテムあたり平均タップ</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={[
+              <HorizontalBarChart
+                data={[
                   { name: "1F", avg: 1239, c: "#7C3AED" },
                   { name: "7F おすすめ", avg: 815, c: "#B45309" },
                   { name: "7F 定番", avg: 450, c: "#8B5E3C" },
                   { name: "B1F", avg: 416, c: "#0369A1" },
                   { name: "その他ブランド", avg: 223, c: "#A16207" },
-                ]} layout="vertical" margin={{ left: 5, right: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v) => [fmt(v), "平均タップ"]} />
-                  <Bar dataKey="avg" radius={[0,4,4,0]} barSize={20}>
-                    {["#7C3AED","#B45309","#8B5E3C","#0369A1","#A16207"].map((c, i) => <Cell key={i} fill={c} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                ]}
+                dataKey="avg"
+                labelKey="name"
+                getColor={(d) => d.c}
+                barHeight={28}
+                labelWidth={100}
+              />
               <p style={{ fontSize: 11, color: "#888", margin: "6px 0 0", textAlign: "center" }}>
                 1Fはオードリー・グラマシーの2商品のみ。その他ブランドはテキストリンクのみ（画像なし）。
               </p>
@@ -295,17 +322,16 @@
             </div>
 
             <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "14px", marginBottom: 14 }}>
-              <ResponsiveContainer width="100%" height={Math.max(prodData.length * 28, 400)}>
-                <BarChart data={prodData} layout="vertical" margin={{ left: 5, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={fmt} />
-                  <YAxis dataKey="short" type="category" width={230} tick={{ fontSize: 9.5 }} interval={0} />
-                  <Tooltip content={<Tip />} />
-                  <Bar dataKey="taps" radius={[0,3,3,0]} barSize={14}>
-                    {prodData.map((d, i) => <Cell key={i} fill={getBarColor(d.taps, d.baseline, d.sec)} opacity={d.isNew ? 1 : 0.78} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <div style={{ maxHeight: 520, overflowY: "auto" }}>
+                <HorizontalBarChart
+                  data={prodData}
+                  dataKey="taps"
+                  labelKey="short"
+                  getColor={(d) => getBarColor(d.taps, d.baseline, d.sec)}
+                  barHeight={18}
+                  showTooltip={TipContent}
+                />
+              </div>
               <div style={{ display: "flex", gap: 14, justifyContent: "center", fontSize: 10, color: "#888", marginTop: 6 }}>
                 <span>🟢 1.5倍超</span><span style={{ color: "#22863A" }}>■ 平均超</span><span style={{ color: "#8B5E3C" }}>■ 平均付近</span><span style={{ color: "#E06C57" }}>■ 0.7倍未満</span><span>🔴 0.5倍未満</span>
               </div>
@@ -376,17 +402,15 @@
             </div>
 
             <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", padding: "14px", marginBottom: 16 }}>
-              <ResponsiveContainer width="100%" height={620}>
-                <BarChart data={brandData} layout="vertical" margin={{ left: 5, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={fmt} />
-                  <YAxis dataKey="short" type="category" width={165} tick={{ fontSize: 10 }} />
-                  <Tooltip content={<Tip />} />
-                  <Bar dataKey="taps" radius={[0,3,3,0]} barSize={16}>
-                    {brandData.map((d, i) => <Cell key={i} fill={getBarColor(d.taps, BRAND_AVG)} />)}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <HorizontalBarChart
+                data={brandData}
+                dataKey="taps"
+                labelKey="short"
+                getColor={(d) => getBarColor(d.taps, BRAND_AVG)}
+                barHeight={20}
+                labelWidth={165}
+                showTooltip={TipContent}
+              />
             </div>
 
             <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #E8E5E0", overflow: "hidden" }}>
