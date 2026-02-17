@@ -4,8 +4,14 @@ Clarity（モバイル）のLPタップデータを可視化するダッシュ�
 
 ## 使い方
 
-- ブラウザで `index.html` を開く
-- CDN（React / Recharts）を読み込むため、インターネット接続が必要です
+**重要:** `file://` で直接開くとCDNがブロックされ白画面になる場合があります。**ローカルサーバーで開いてください。**
+
+```bash
+cd lp-tap-analysis
+python3 -m http.server 8080
+```
+
+ブラウザで http://localhost:8080/ を開く。インターネット接続が必要です。
 
 ## GitHub Pages でホストする場合
 

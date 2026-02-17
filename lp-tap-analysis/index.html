@@ -7,17 +7,27 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/recharts@2/umd/Recharts.js"></script>
-  <script crossorigin src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
+  <script>React.PropTypes = PropTypes;</script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/recharts@2.15.0/umd/Recharts.min.js"></script>
+  <script crossorigin src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
   <style>
     body { margin: 0; font-family: inherit; }
+    #load-error { display: none; padding: 16px; background: #FEE2E2; color: #B91C1C; font-size: 13px; }
   </style>
+  <script>
+    window.onerror = function(msg, url, line) {
+      var el = document.getElementById('load-error');
+      if (el) { el.style.display = 'block'; el.textContent = 'エラー: ' + msg + ' (行' + line + ')'; }
+    };
+  </script>
 </head>
 <body>
-  <div id="root"></div>
-  <script type="text/babel" data-presets="react">
+  <div id="load-error"></div>
+  <div id="root" style="padding: 20px; font-family: sans-serif;">読み込み中…</div>
+  <script type="text/babel" data-presets="env,react">
     const { useState, useMemo } = React;
     const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } = Recharts;
 
