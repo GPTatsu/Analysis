@@ -2,6 +2,9 @@
 data/
 history.csv
 
+# 生成物・レポート（メルマガ週次等）
+output/
+
 # Python
 __pycache__/
 *.pyc
